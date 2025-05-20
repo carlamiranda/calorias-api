@@ -17,12 +17,12 @@
     {:alimento nome
      :calorias (-> dados :foods first :nf_calories)}))
 
-(defn buscar-exercicio [nome peso tempo]
+(defn buscar-exercicio [nome peso tempo altura idade genero]
   (let [body (json/generate-string {:query (str tempo " minutes of " nome)
                                     :weight_kg peso
-                                    :height_cm 170
-                                    :age 25
-                                    :gender "male"})
+                                    :height_cm altura
+                                    :age idade
+                                    :gender genero})
         res (http/post "https://trackapi.nutritionix.com/v2/natural/exercise"
                        {:headers headers :body body})
         dados (json/parse-string (:body res) true)]

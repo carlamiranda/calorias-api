@@ -6,9 +6,12 @@
 
 (defroutes rotas
   (GET "/" [] "API de calorias está online.")
-  (GET "/alimento" [nome] (ctrl/handle-alimento nome))
-  (GET "/exercicio" [nome peso tempo] (ctrl/handle-exercicio nome peso tempo))
-  (route/not-found "404 - Rota não encontrada"))
 
-(def app
-  (wrap-defaults rotas api-defaults))
+  (GET "/alimento" [nome]
+    (ctrl/handle-alimento nome))
+
+  (GET "/exercicio" [nome peso tempo altura idade genero]
+    (ctrl/handle-exercicio nome peso tempo altura idade genero))
+
+
+  (route/not-found "404 - Recurso não encontrado"))
