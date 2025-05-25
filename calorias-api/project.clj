@@ -5,7 +5,8 @@
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [compojure "1.6.1"]
                  [ring/ring-defaults "0.3.2"]
-                 [clj-http "3.12.3"]]
+                 [clj-http "3.12.3"]
+                 [ring/ring-json "0.5.1"]]
   :plugins [[lein-ring "0.12.5"]]
   :ring {:handler calorias-api.handler/app}
   :profiles
