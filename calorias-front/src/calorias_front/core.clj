@@ -66,30 +66,39 @@
         _ (println "Digite seu gênero (male/female):")
         genero (read-line)]
 
-    (loop []
-      (menu)
-      (print "Escolha uma opção: ") (flush)
-      (let [opcao (read-line)]
-        (case opcao
-          "1" (do
-                (println "Digite alimento ou exercício (ex: banana / running 30min):")
-                (let [entrada (read-line)]
-                  (registrar entrada peso altura idade genero))
+(defn opcoes-menu []
+    (menu)
+    (print "Escolha uma opção: ") (flush)
+    (let [opcao (read-line)]
+      (case opcao
+        "1" (do
+              (println "Digite alimento ou exercício (ex: banana / running 30min). Digite 'finalizar' para encerrar:")
+              (doall
+               (map #(registrar % peso altura idade genero)
+                    (take-while #(not (#{"finalizar" "Finalizar"} %))
+                                (repeatedly #(read-line)))))
                 (recur))
-          "2" (do
-                (println (str "Saldo atual de calorias: " (buscar-saldo)))
-                (recur))
-          "3" (do
-                (println "Histórico de transações:")
-                (doseq [t (buscar-transacoes)]
-                  (println t))
-                (recur))
-          "4" (do
-                (limpar-transacoes)
-                (recur))
-          "5" (do
-                (println "Encerrando.")
-                (System/exit 0))
-          (do
-            (println "Opção inválida.")
-            (recur)))))))
+      "2" (do
+            (let [dados (buscar-saldo)
+                  consumidas (:consumidas dados)
+                  gastas (:gastas dados)
+                  saldo (:saldo dados)]
+              (println (str "\nCalorias consumidas: " consumidas))
+              (println (str "Calorias gastas: " gastas))
+              (println (str "Saldo de calorias: " saldo)))
+            (recur))
+        "3" (do
+              (println "Histórico de transações:")
+              (doall (map println (buscar-transacoes)))
+              (recur))
+        "4" (do
+              (limpar-transacoes)
+              (recur))
+        "5" (do
+              (println "Encerrando.")
+              (System/exit 0))
+        (do
+          (println "Opção inválida.")
+          (recur))))))
+  
+  (opcoes-menu))

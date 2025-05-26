@@ -20,4 +20,10 @@
       (+ acumulado valor))))
 
 (defn saldo []
-  (reduce calcular 0 @registros))
+  (let [registros @registros
+        consumidas (reduce + 0 (map :valor (remove exercicio? registros)))
+        gastas    (reduce + 0 (map :valor (filter exercicio? registros)))
+        saldo     (- consumidas gastas)]
+    {:consumidas consumidas
+     :gastas gastas
+     :saldo saldo}))
