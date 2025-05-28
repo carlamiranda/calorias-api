@@ -5,21 +5,21 @@
             [clojure.string :as str]))
 
 (defn buscar-alimento [nome]
-  (let [res (http/get "http://localhost:3000/alimento"
-                      {:query-params {"nome" nome}
-                       :as :json})]
-    (:body res)))
+  (:body
+   (http/get "http://localhost:3000/alimento"
+             {:query-params {"nome" nome}
+              :as :json})))
 
 (defn buscar-exercicio [nome peso tempo altura idade genero]
-  (let [res (http/get "http://localhost:3000/exercicio"
-                      {:query-params {"nome" nome
-                                      "peso" (str peso)
-                                      "tempo" (str tempo)
-                                      "altura" (str altura)
-                                      "idade" (str idade)
-                                      "genero" genero}
-                       :as :json})]
-    (:body res)))
+  (:body
+   (http/get "http://localhost:3000/exercicio"
+             {:query-params {"nome" nome
+                             "peso" (str peso)
+                             "tempo" (str tempo)
+                             "altura" (str altura)
+                             "idade" (str idade)
+                             "genero" genero}
+              :as :json})))
 
 (defn buscar-saldo []
   (-> (http/get "http://localhost:3000/saldo" {:as :json}) :body :saldo))
@@ -31,20 +31,26 @@
   (http/post "http://localhost:3000/limpar")
   (println "Histórico apagado com sucesso."))
 
+(defn registrar-exercicio [entrada peso altura idade genero]
+  (let [[exercicio tempo-str] (str/split entrada #" ")
+        tempo (Integer/parseInt (str/replace tempo-str "min" ""))]
+    (try
+      (let [gasto (buscar-exercicio exercicio peso tempo altura idade genero)]
+        (str "Gastou " (int (:valor gasto)) " cal com " (:nome gasto)))
+      (catch Exception _
+        "Exercício não reconhecido."))))
+
+(defn registrar-alimento [entrada]
+  (try
+    (let [cal (buscar-alimento entrada)]
+      (str "Ingeriu " (int (:valor cal)) " cal com " (:nome cal)))
+    (catch Exception _
+      "Alimento não reconhecido.")))
+
 (defn registrar [entrada peso altura idade genero]
   (if (str/includes? entrada "min")
-    (let [[exercicio tempo-str] (str/split entrada #" ")
-          tempo (Integer/parseInt (str/replace tempo-str "min" ""))]
-      (try
-        (let [gasto (buscar-exercicio exercicio peso tempo altura idade genero)]
-          (println (str "Gastou " (int (:valor gasto)) " cal com " (:nome gasto))))
-        (catch Exception _e
-          (println "Exercício não reconhecido."))))
-    (try
-      (let [cal (buscar-alimento entrada)]
-        (println (str "Ingeriu " (int (:valor cal)) " cal com " (:nome cal))))
-      (catch Exception _e
-        (println "Alimento não reconhecido.")))))
+    (registrar-exercicio entrada peso altura idade genero)
+    (registrar-alimento entrada)))
 
 (defn menu []
   (println "\n--- Menu ---")
@@ -54,8 +60,44 @@
   (println "4 - Limpar histórico")
   (println "5 - Sair"))
 
+(defn opcoes-menu [peso altura idade genero]
+  (menu)
+  (print "Escolha uma opção: ") (flush)
+  (let [opcao (read-line)]
+    (case opcao
+      "1" (do
+            (println "Digite alimento ou exercício (ex: banana / running 30min). Digite 'finalizar' para encerrar:")
+            (doall
+             (map println
+                  (map #(registrar % peso altura idade genero)
+                       (take-while #(not (#{"finalizar" "Finalizar"} %))
+                                   (repeatedly #(read-line))))))
+            (recur peso altura idade genero))
+      "2" (do
+            (let [dados (buscar-saldo)
+                  consumidas (:consumidas dados)
+                  gastas (:gastas dados)
+                  saldo (:saldo dados)]
+              (println (str "\nCalorias consumidas: " consumidas))
+              (println (str "Calorias gastas: " gastas))
+              (println (str "Saldo de calorias: " saldo)))
+            (recur peso altura idade genero))
+      "3" (do
+            (println "Histórico de transações:")
+            (doall (map println (buscar-transacoes)))
+            (recur peso altura idade genero))
+      "4" (do
+            (limpar-transacoes)
+            (recur peso altura idade genero))
+      "5" (do
+            (println "Encerrando.")
+            (System/exit 0))
+      (do
+        (println "Opção inválida.")
+        (recur peso altura idade genero)))))
+
 (defn -main [& args]
-  (println "Bem-vindo ao Rastreador de Calorias")
+  (println "Bem-vindo(a) ao Rastreador de Calorias")
 
   (println "Digite seu peso (kg):")
   (let [peso (Double/parseDouble (read-line))
@@ -65,40 +107,4 @@
         idade (Integer/parseInt (read-line))
         _ (println "Digite seu gênero (male/female):")
         genero (read-line)]
-
-(defn opcoes-menu []
-    (menu)
-    (print "Escolha uma opção: ") (flush)
-    (let [opcao (read-line)]
-      (case opcao
-        "1" (do
-              (println "Digite alimento ou exercício (ex: banana / running 30min). Digite 'finalizar' para encerrar:")
-              (doall
-               (map #(registrar % peso altura idade genero)
-                    (take-while #(not (#{"finalizar" "Finalizar"} %))
-                                (repeatedly #(read-line)))))
-                (recur))
-      "2" (do
-            (let [dados (buscar-saldo)
-                  consumidas (:consumidas dados)
-                  gastas (:gastas dados)
-                  saldo (:saldo dados)]
-              (println (str "\nCalorias consumidas: " consumidas))
-              (println (str "Calorias gastas: " gastas))
-              (println (str "Saldo de calorias: " saldo)))
-            (recur))
-        "3" (do
-              (println "Histórico de transações:")
-              (doall (map println (buscar-transacoes)))
-              (recur))
-        "4" (do
-              (limpar-transacoes)
-              (recur))
-        "5" (do
-              (println "Encerrando.")
-              (System/exit 0))
-        (do
-          (println "Opção inválida.")
-          (recur))))))
-  
-  (opcoes-menu))
+    (opcoes-menu peso altura idade genero)))
