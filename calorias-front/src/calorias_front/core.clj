@@ -31,6 +31,29 @@
   (http/post "http://localhost:3000/limpar")
   (println "Histórico apagado com sucesso."))
 
+(defn registrar-usuario [altura peso idade genero]
+  (http/post "http://localhost:3000/usuario"
+             {:body (json/generate-string {:altura altura
+                                           :peso peso
+                                           :idade idade
+                                           :genero genero})
+              :headers {"Content-Type" "application/json"}
+              :as :json}))
+
+(defn buscar-usuario []
+  (:body (http/get "http://localhost:3000/usuario" {:as :json})))
+
+(defn apresentar-usuario [usuario]
+  (str "\nUsuário registrado:"
+       "\nAltura: " (:altura usuario) " cm"
+       "\nPeso: " (:peso usuario) " kg"
+       "\nIdade: " (:idade usuario)
+       "\nGênero: " (:genero usuario)))
+       
+(defn mostrar-usuario []
+  (let [usuario (buscar-usuario)]
+    (println (apresentar-usuario usuario))))
+
 (defn registrar-exercicio [entrada peso altura idade genero]
   (let [[exercicio tempo-str] (str/split entrada #" ")
         tempo (Integer/parseInt (str/replace tempo-str "min" ""))]
@@ -58,7 +81,8 @@
   (println "2 - Ver saldo total")
   (println "3 - Ver histórico de transações")
   (println "4 - Limpar histórico")
-  (println "5 - Sair"))
+  (println "5 - Mostrar usuário registrado")
+  (println "6 - Sair"))
 
 (defn opcoes-menu [peso altura idade genero]
   (menu)
@@ -90,6 +114,9 @@
             (limpar-transacoes)
             (recur peso altura idade genero))
       "5" (do
+            (mostrar-usuario)
+            (recur peso altura idade genero))
+      "6" (do
             (println "Encerrando.")
             (System/exit 0))
       (do
@@ -107,4 +134,6 @@
         idade (Integer/parseInt (read-line))
         _ (println "Digite seu gênero (male/female):")
         genero (read-line)]
+
+    (registrar-usuario altura peso idade genero)
     (opcoes-menu peso altura idade genero)))

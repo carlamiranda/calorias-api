@@ -15,6 +15,13 @@
     (db/limpar)
     (response {:mensagem "Transações apagadas."})))
 
+(defn handle-saldo-por-periodo [inicio fim]
+  (response (db/saldo-por-periodo inicio fim)))
+
+(defn handle-transacoes-por-periodo [inicio fim]
+  (response (db/transacoes-por-periodo inicio fim)))
+
+
 
 (defn handle-alimento [nome]
   (try
@@ -27,7 +34,6 @@
        :body (json/generate-string transacao)})
     (catch Exception _
       {:status 400 :body "Erro ao buscar alimento"})))
-
 
 (defn handle-exercicio [nome peso tempo altura idade genero]
   (try
@@ -45,3 +51,28 @@
        :body (json/generate-string transacao)})
     (catch Exception _
       {:status 400 :body "Erro ao buscar exercício"})))
+
+(defn handle-registrar-usuario [request]
+  (try
+    (let [dados (:body request)
+          {:keys [altura peso idade genero]} dados]
+      (if (and altura peso idade genero)
+        (do
+          (db/registrar-usuario dados)
+          {:status 200
+           :headers {"Content-Type" "application/json"}
+           :body (json/generate-string {:mensagem "O usuário foi registrado."
+                                       :usuario dados})})
+        {:status 400
+         :headers {"Content-Type" "application/json"}
+         :body (json/generate-string {:erro "Os dados estão incompletos"})}))
+    (catch Exception _
+      {:status 500
+       :headers {"Content-Type" "application/json"}
+       :body (json/generate-string {:erro "Erro ao registrar usuário"})})))
+
+(defn handle-obter-usuario []
+  (try
+    (response (db/obter-usuario))
+    (catch Exception _
+      {:status 500 :body "Erro ao obter usuário"})))
