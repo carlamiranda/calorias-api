@@ -15,14 +15,6 @@
     (db/limpar)
     (response {:mensagem "Transações apagadas."})))
 
-(defn handle-saldo-por-periodo [inicio fim]
-  (response (db/saldo-por-periodo inicio fim)))
-
-(defn handle-transacoes-por-periodo [inicio fim]
-  (response (db/transacoes-por-periodo inicio fim)))
-
-
-
 (defn handle-alimento [nome]
   (try
     (let [resultado (svc/buscar-alimento nome)

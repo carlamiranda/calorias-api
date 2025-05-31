@@ -15,8 +15,6 @@
   (POST "/limpar" [] (ctrl/handle-limpar))
   (POST "/usuario" request (ctrl/handle-registrar-usuario request))
   (GET "/usuario" [] (ctrl/handle-obter-usuario))
-  (GET "/saldo-periodo" [inicio fim] (ctrl/handle-saldo-por-periodo inicio fim))
-  (GET "/transacoes-periodo" [inicio fim] (ctrl/handle-transacoes-por-periodo inicio fim))
 
   (route/not-found "404 - Recurso não encontrado"))
 
